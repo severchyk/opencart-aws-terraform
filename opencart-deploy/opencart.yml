@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: opencart
-        image: severchyk/opencart:2.3.0.2-centos-7
+        image: severchyk/opencart:latest
         ports:
         - containerPort: 8080
 ---

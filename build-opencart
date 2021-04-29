@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('git checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/severko22/opencart'
+            }
+        }
+        
+        stage('build dockerfile') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    dir('opencart-2.3.0.2') {
+                        sh 'docker build -t severchyk/opencart:latest .'
+                    }
+                }
+            }
+        }
+        
+        stage('push docker image') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    dir('opencart-2.3.0.2') {
+                        sh 'docker push severchyk/opencart:latest'
+                    }
+                }
+            }
+        }
+    }
+}

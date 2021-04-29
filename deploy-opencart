@@ -1,0 +1,33 @@
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('git checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/severko22/opencart-aws-terraform'
+            }
+        }
+        
+        stage('kubectl config file') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh 'aws eks --region us-east-2 update-kubeconfig --name dev-eks-opencart'
+                }
+            }
+        }
+        
+        stage('opencart deploy') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_credentials', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    dir('opencart-deploy') {
+                        sh 'kubectl apply -f opencart.yml'
+                        sh 'kubectl apply -f mysql.yml'
+                        sh 'kubectl get svc --all-namespaces'
+                    }
+                }
+            }
+        }
+    }
+}
